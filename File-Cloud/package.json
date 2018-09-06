@@ -1,0 +1,35 @@
+{
+    "name": "file-cloud",
+    "version": "1.0.0",
+    "description": "Software Engineering Project",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "sadat",
+    "license": "ISC",
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "body-parser": "^1.18.3",
+        "connect-flash": "^0.1.1",
+        "ejs": "^2.6.1",
+        "express": "^4.16.3",
+        "express-async-router": "^0.1.13",
+        "express-session": "^1.15.6",
+        "express-validator": "^5.3.0",
+        "gentelella": "^1.4.0",
+        "mongodb": "^3.1.4",
+        "mongoose": "^5.2.12",
+        "mongoose-auto-increment": "^5.0.1",
+        "node-datetime": "^2.1.0",
+        "nodemailer": "^4.6.8",
+        "passport": "^0.4.0",
+        "passport-local": "^1.0.0",
+        "path": "^0.12.7",
+        "sweetalert2": "^7.26.14",
+        "xoauth2": "^1.2.0"
+    },
+    "devDependencies": {
+        "nodemon": "^1.18.4"
+    }
+}
