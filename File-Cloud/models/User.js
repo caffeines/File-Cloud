@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const { mongoURL } = require('../config/database');
 const autoIncrement = require('mongoose-auto-increment');
-var connection = mongoose.createConnection(mongoURL);
-autoIncrement.initialize(connection);
+const { conn } = require('../config/mongoDB');
+autoIncrement.initialize(conn);
 const UserSchema = new Schema({
     email: {
         type: String,

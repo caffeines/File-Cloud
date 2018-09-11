@@ -1,26 +1,12 @@
 // Express conection
-var express = require('express');
-var app = express();
-const session = require('express-session')
-    // importing config/databse
-const { mongoURL } = require('./config/database');
+const express = require('express');
+const app = express();
+const methodOverride = require('method-override');
+const session = require('express-session');
 
 // Embedded JavaScript templates
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
-app.use(express.static('views'));
-
-// MongoDB Connection
-const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-mongoose.connect(mongoURL, {
-    useNewUrlParser: true
-});
-mongoose.connection
-    .once('open', () => console.log('** MongoDB connected successfully -_- **'))
-    .on('error', err => {
-        throw err;
-    });
 
 // Body-Parser
 const bodyParser = require('body-parser');
@@ -52,5 +38,6 @@ app.use('/', main);
 app.use('/signup', main);
 app.use('/login', main);
 app.use('/enter', main);
+app.use('/upload', main);
 
 app.listen(3000);

@@ -4,6 +4,14 @@ const router = express.Router();
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
+const GridFsStorage = require('multer-gridfs-storage');
+const Grid = require('gridfs-stream');
+const path = require('path');
+const { conn } = require('../../config/mongoDB');
+const { mongoURL } = require('../../config/database');
+const mongoose = require('mongoose');
+
 
 //userAuthentication checker
 const { userAuthenticated } = require('../../helpers/authentication');
@@ -17,8 +25,17 @@ router.get('/', function(req, res) {
 });
 
 // enter page  
-router.get('/enter/:name', userAuthenticated, function(req, res) {
-    res.render('../views/home/index1');
+router.get('/enter/:id', userAuthenticated, function(req, res) {
+    if (userAuthenticated) {
+        let id = req.params.id;
+        var name = 'Sadat';
+        User.findById({ _id: id }).then(user => {
+            name = user.name;
+        })
+        res.render('../views/home/index', { name: name, id: id });
+    } else {
+        res.redirect('/login');
+    }
 });
 
 // Login
@@ -30,9 +47,11 @@ passport.use(new LocalStrategy({
     User.findOne({
         email: email
     }).then(user => {
-        if (!user) return done(null, false, {
-            message: 'No user found'
-        });
+        if (!user) {
+            return done(null, false, {
+                message: 'No user found'
+            });
+        }
 
         bcrypt.compare(password, user.password, (err, matched) => {
             if (err) return err;
@@ -66,10 +85,13 @@ router.post('/login', (req, res, next) => {
             var id = users._id;
             passport.authenticate('local', {
                 successRedirect: '/enter/' + id,
-                failureRedirect: '/',
+                failureRedirect: '/login',
                 failureFlash: true
             })(req, res, next);
+        } else {
+            res.redirect('/login');
         }
+
     });
 });
 
@@ -95,6 +117,7 @@ var smtpTransport = nodemailer.createTransport({
 // Date time
 const datetime = require('node-datetime');
 const dt = datetime.create();
+
 // Sign up here
 router.post('/signup', (req, res) => {
 
@@ -114,6 +137,7 @@ router.post('/signup', (req, res) => {
             // bcrypt js - for hassing password
             bcrypt.genSalt(10, (err, sallt) => {
                 bcrypt.hash(newUser.password, sallt, (err, hash) => {
+                    if (err) throw err;
                     newUser.password = hash;
 
                     //newUser saving here
@@ -156,6 +180,44 @@ router.post('/signup', (req, res) => {
     });
 });
 
+// Init gfs
+let gfs;
+conn.once('open', function() {
+    // Init stream
+    gfs = Grid(conn.db, mongoose.mongo);
+    gfs.collection('uploads');
+    // all set!
+})
 
+// Create storage engine
+var storage = new GridFsStorage({
+    url: mongoURL,
+    file: (req, file) => {
+        return new Promise((resolve, reject) => {
+
+            const filename = file.originalname;
+            const fileAuthor = 'Sadat';
+            console.log(fileAuthor);
+
+            const fileInfo = {
+                filename: filename,
+                fileAuthor: fileAuthor,
+                bucketName: 'uploads'
+            };
+            resolve(fileInfo);
+        });
+    }
+});
+
+const upload = multer({
+    storage
+});
+// Upload files
+router.post('/:id/upload/', upload.single('file'), (req, res) => {
+
+    res.json({
+        file: req.file
+    });
+});
 
 module.exports = router;
