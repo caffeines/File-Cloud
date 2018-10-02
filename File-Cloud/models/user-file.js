@@ -6,11 +6,9 @@ const UserFileSchema = new Schema({
         required: true,
         minLength: 6
     },
-    name: {
+    fileId: {
         type: String,
         required: true,
-        minLength: 3,
-        trim: true
     },
 });
 module.exports = mongoose.model('userFile', UserFileSchema);

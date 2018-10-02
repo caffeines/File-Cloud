@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const methodOverride = require('method-override');
 const session = require('express-session');
+const port = process.env.PORT || 8080;
 
 // Embedded JavaScript templates
 app.set('view engine', 'ejs');
@@ -39,5 +40,9 @@ app.use('/signup', main);
 app.use('/login', main);
 app.use('/enter', main);
 app.use('/upload', main);
+app.use('/files', main);
+app.use('/delete', main);
+app.use('/view', main);
+app.use('/download', main);
 
-app.listen(3000);
+app.listen(port);

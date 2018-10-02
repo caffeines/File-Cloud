@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const { mongoURL } = require('./database');
-mongoose.Promise = global.Promise;
 
 // MongoDB Connection
 mongoose.Promise = global.Promise;

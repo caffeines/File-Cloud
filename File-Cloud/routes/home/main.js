@@ -11,6 +11,12 @@ const path = require('path');
 const { conn } = require('../../config/mongoDB');
 const { mongoURL } = require('../../config/database');
 const mongoose = require('mongoose');
+const dir = require('../../helpers/dir');
+const US = require('../../helpers/user');
+const fs = require('file-system');
+var jwt = require('jsonwebtoken');
+
+
 
 
 //userAuthentication checker
@@ -18,21 +24,45 @@ const { userAuthenticated } = require('../../helpers/authentication');
 
 //Schema 
 const User = require('../../models/User');
+const UserFile = require('../../models/user-file');
+
 
 // Landing page 
 router.get('/', function(req, res) {
     res.sendfile('./Views/landing.html');
 });
 
+var Dir = new dir('');
 // enter page  
 router.get('/enter/:id', userAuthenticated, function(req, res) {
     if (userAuthenticated) {
         let id = req.params.id;
-        var name = 'Sadat';
+        Dir.setDir('' + id);
+
         User.findById({ _id: id }).then(user => {
-            name = user.name;
+            const name = user.name;
+            var gfs = Grid(conn.db, mongoose.mongo);
+            let str = '' + Dir.getDir();
+            gfs.collection(str);
+            //console.log(gfs);
+
+
+            gfs.files.find().toArray(function(err, files) {
+                if (!files || files.length === 0) {
+                    res.render('../views/home/index', {
+                        name: name,
+                        id: id,
+                        files: false,
+                    });
+                } else {
+                    res.render('../views/home/index', {
+                        name: name,
+                        id: id,
+                        files: files,
+                    });
+                }
+            })
         })
-        res.render('../views/home/index', { name: name, id: id });
     } else {
         res.redirect('/login');
     }
@@ -83,6 +113,9 @@ router.post('/login', (req, res, next) => {
     }).then(users => {
         if (users != null && users.email == req.body.email) {
             var id = users._id;
+            jwt.sign({ user: users }, 'secretkey', (err, token) => {
+
+            });
             passport.authenticate('local', {
                 successRedirect: '/enter/' + id,
                 failureRedirect: '/login',
@@ -94,6 +127,21 @@ router.post('/login', (req, res, next) => {
 
     });
 });
+
+// Verify Token
+
+function verifyToken(req, res, next) {
+    const bearerHeader = req.headers['authorization'];
+
+    if (typeof bearerHeader !== 'undefined') {
+        const bearer = bearerHeader.split(' ');
+        const bearerToken = bearer[1];
+        req.token = bearerToken;
+        next();
+    } else {
+        res.sendStatus(404);
+    }
+}
 
 // logout
 router.get('/logout', (req, res) => {
@@ -120,6 +168,7 @@ const dt = datetime.create();
 
 // Sign up here
 router.post('/signup', (req, res) => {
+
 
     User.findOne({
         email: req.body.email
@@ -181,28 +230,16 @@ router.post('/signup', (req, res) => {
 });
 
 // Init gfs
-let gfs;
-conn.once('open', function() {
-    // Init stream
-    gfs = Grid(conn.db, mongoose.mongo);
-    gfs.collection('uploads');
-    // all set!
-})
-
 // Create storage engine
 var storage = new GridFsStorage({
     url: mongoURL,
     file: (req, file) => {
         return new Promise((resolve, reject) => {
 
-            const filename = file.originalname;
-            const fileAuthor = 'Sadat';
-            console.log(fileAuthor);
-
+            const filename = dt.format('dmyHMS') + file.originalname;
             const fileInfo = {
                 filename: filename,
-                fileAuthor: fileAuthor,
-                bucketName: 'uploads'
+                bucketName: Dir.getDir()
             };
             resolve(fileInfo);
         });
@@ -213,10 +250,76 @@ const upload = multer({
     storage
 });
 // Upload files
-router.post('/:id/upload/', upload.single('file'), (req, res) => {
+router.post('/:id/upload', userAuthenticated, upload.single('file'), (req, res) => {
+    let id = req.params.id;
+    res.redirect('/enter/' + id);
+});
 
-    res.json({
-        file: req.file
+router.get('/files', userAuthenticated, (req, res) => {
+    var gfs = Grid(conn.db, mongoose.mongo);
+    let str = '' + Dir.getDir();
+    gfs.collection(str);
+    gfs.files.find().toArray(function(err, files) {
+        res.json(files);
+    })
+});
+
+router.get('/view/:id', userAuthenticated, (req, res) => {
+    var gfs = Grid(conn.db, mongoose.mongo);
+    let str = '' + Dir.getDir();
+    gfs.collection(str);
+    console.log(req.params.filename);
+
+    gfs.files.findOne({
+        filename: req.params.id,
+        //_id: req.params.id,
+    }, (err, file) => {
+        if (!file || file.length === 0) {
+            return res.status(404).json({ err: 'No file exist' });
+        } else {
+            console.log('------------------------------------');
+            console.log(file.filename);
+            console.log('------------------------------------');
+            const readstream = gfs.createReadStream(file.filename);
+            readstream.pipe(res);
+        }
+    })
+})
+
+router.get('/delete/:id', userAuthenticated, (req, res) => {
+    const gfs = Grid(conn.db, mongoose.mongo);
+    gfs.collection(Dir.getDir());
+
+
+    gfs.remove({
+        _id: req.params.id,
+        root: Dir.getDir()
+    }, (err, gridStore) => {
+        if (err) handleError(err);
+        else {
+            res.redirect('/enter/' + Dir.getDir());
+            console.log('success');
+        }
+    });
+})
+
+router.get('/download/:id', userAuthenticated, (req, res) => {
+    const gfs = Grid(conn.db, mongoose.mongo);
+    gfs.collection(Dir.getDir());
+    var filename = req.params.id;
+
+    gfs.exist({
+        filename: filename
+    }, (err, file) => {
+        if (err || !file) {
+            res.status(404).send('File Not Found');
+            return
+        }
+
+        var readstream = gfs.createReadStream({
+            filename: filename
+        });
+        readstream.pipe(res);
     });
 });
 
