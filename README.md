@@ -1,6 +1,6 @@
 # File-Cloud
-This is a simple Node Express based web Application. You can add,view and download file easily. It is more likely Online File Sharing like Dropbox, Google Drive.   
-
+> This is a simple Node Express based web Application. You can add,view and download file easily. It is more likely Online File Sharing like Dropbox, Google Drive.   
+---
 ## Clone by Git
 ```
 git clone https://github.com/caffeines/File-Cloud.git
