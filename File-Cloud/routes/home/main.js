@@ -157,9 +157,9 @@ var smtpTransport = nodemailer.createTransport({
     auth: {
         type: "OAuth2",
         user: "me.caffeines@gmail.com", // Your gmail address.
-        clientId: "65590644875-5na2q9q6k5qhrlkbjvet36shgmn9c5ls.apps.googleusercontent.com",
-        clientSecret: "y3RKBgm1008bjQk8vvGNIuFe",
-        refreshToken: "1/uaE5RS0H_o68oXneH9MFo2uGUY_MPhh5w8T9_sLWEZi6QrEchXTToVpy1Xv1udEY"
+        clientId: "65590644875-5na2q9q6k5qhrlkbjvet36shg5ls.apps.googleusercontent.com",
+        clientSecret: "y3RKBgm1008k8vvGNIuFe",
+        refreshToken: "1/uaE5RS0H_o68oXneH9MFo2Y_MPhh5w8T9_sLWEZi6QrEchXTToVpy1Xv1udEY"
     }
 });
 // Date time
